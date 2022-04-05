@@ -1,0 +1,82 @@
+Topology
+------------------------------------------------------------
+
+oai_gnb_ue_sim-VM(eth1 - 192.168.60.154) -------- (eth1 - 192.168.60.176) Magma-VM
+
+
+Pre-Requisites for VM preperations
+-----------------------------------------------------------
+1.
+For launching the Simulator vagrant file
+
+vagrant up oai_gnb_ue_sim --provider=virtualbox
+
+2.
+Installing dockers in virtualbox (oai_gnb_ue_sim)
+
+2.1 Install dockers (https://docs.docker.com/engine/install/ubuntu/)
+2.2 Install docker-compose (https://docs.docker.com/compose/install/)
+
+(High level steps added in : AdditionalDockerSteps.txt)
+
+2.3 Use the docker-compose file (as part of repo)
+    -> mkdir OAI_GNB_UE_SIM
+    -> Copy the docker-compose.yaml
+    -> (/home/vagrant/OAI_GNB_UE_SIM/docker-compose.yaml)
+ 
+3.
+Pulling the docker imagesi of OAI UE and GNB Simulator on the VM(oai_gnb_ue_sim)
+
+sudo docker pull panyogesh/oai-gnb:latest
+sudo docker pull panyogesh/oai-nr-ue:latest
+
+sudo docker image tag panyogesh/oai-gnb:latest oai-gnb:latest
+sudo docker image tag panyogesh/oai-nr-ue:latest oai-nr-ue:latest
+
+4.
+Launching the dockers within Virtualbox (oai_gnb_ue_sim)
+
+4.1 sudo docker-compose up oai-gnb
+4.2 sudo docker-compose up oai-nr-ue
+
+5.
+In case of issues : 
+
+sudo docker-compose rm oai-nr-ue
+
+
+Verification steps on VM
+---------------------------------------------------------
+
+1.
+For GNB Connectivity :
+  - cat /proc/net/sctp/assocs
+
+Expected Output :- 
+vagrant@oai-gnb-ue-sim:~$ cat /proc/net/sctp/assocs
+ ASSOC     SOCK   STY SST ST HBKT ASSOC-ID TX_QUEUE RX_QUEUE UID INODE LPORT RPORT LADDRS <-> RADDRS HBINT INS OUTS MAXRT T1X T2X RTXC wmema wmemq sndbuf rcvbuf
+       0        0 2   1   3  0       1        0        0       0 50838 51643 38412  192.168.60.154 <-> *192.168.60.176      7500     2     2   10    0    0        0        1        0   212992   212992
+vagrant@oai-gnb-ue-sim:~$
+
+2.
+For UE connectivity :
+   -  ifconfig -a | grep tun -A7
+   -  ping 8.8.8.8 -I 192.168.128.13
+
+Expected output : ifconfig -a | grep tun -A7
+
+oaitun_ue1: flags=4305<UP,POINTOPOINT,RUNNING,NOARP,MULTICAST>  mtu 1500
+        inet 192.168.128.13  netmask 255.255.255.0  destination 192.168.128.13
+        inet6 fe80::c7f5:9b33:5826:411b  prefixlen 64  scopeid 0x20<link>
+        unspec 00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00  txqueuelen 500  (UNSPEC)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 5  bytes 240 (240.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+Expected output : ping 8.8.8.8 -I 192.168.128.13 
+vagrant@oai-gnb-ue-sim:~$ ping 8.8.8.8 -I 192.168.128.13 -c 3
+PING 8.8.8.8 (8.8.8.8) from 192.168.128.13 : 56(84) bytes of data.
+64 bytes from 8.8.8.8: icmp_seq=1 ttl=61 time=48.3 ms
+64 bytes from 8.8.8.8: icmp_seq=2 ttl=61 time=41.2 ms
+64 bytes from 8.8.8.8: icmp_seq=3 ttl=61 time=42.5 ms

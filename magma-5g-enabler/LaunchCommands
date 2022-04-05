@@ -1,0 +1,218 @@
+Topology
+------------------------------------------------------------
+
+oai_gnb_ue_sim-VM(eth1 - 192.168.60.154) -------- (eth1 - 192.168.60.176) Magma-VM
+
+
+Pre-Requisites for VM preperations
+-----------------------------------------------------------
+1.
+For launching the Simulator vagrant file
+
+[HOST] vagrant up distromagma --provider=virtualbox
+
+2.
+Once magma is up login (vagrant ssh distromagma) and perform following steps
+
+  2.1 
+  Change the name of the interfaces on the VM
+     2.1.1 sudo su
+     2.1.2 sed -i 's/GRUB_CMDLINE_LINUX=""/GRUB_CMDLINE_LINUX="net.ifnames=0 biosdevname=0"/g' /etc/default/grub
+     2.1.3 sed -i 's/enp0s3/eth0/g' /etc/netplan/50-cloud-init.yaml
+     2.1.4 grub-mkconfig -o /boot/grub/grub.cfg
+
+  2.2 
+  Reload or restart the machine
+    [HOST] vagrant reload distromagma
+
+  2.3
+  Login and check if the names are changed correctly (ifconfig -a, eth0/eth1/eth2)
+
+3.
+Package installation on VM (distromagma)
+
+  - sudo su
+  - wget https://raw.githubusercontent.com/magma/magma/master/lte/gateway/deploy/agw_install_ubuntu.sh
+  - bash agw_install_ubuntu.sh
+  Note: 
+    -> Do you accept those modifications and want to proceed with magma installation?(y/n) y  <<< Enter y
+    -> This will install packages and restart the machine
+ 
+Launching of 5G Services
+-----------------------------------------------------------
+As this will be default put the AGW in headless mode, following changes are needed to enable 5G features
+
+1. Changes in /etc/magma/gateway.mconfig to enable5g Features
+
+1.1
+enable5gFeatures to true in gateway.mconfig (in /etc/magma/gateway.mconfig)
+  1.1.1 Sample output
+  vagrant@distro-magma:/etc/magma$ cat gateway.mconfig | grep enable5
+      "enable5gFeatures": true,
+      "enable5gFeatures": true,
+      "enable5gFeatures": true,
+      "enable5gFeatures": true,
+  vagrant@distro-magma:/etc/magma$
+
+1.2.
+Set the MCC and MNC value in gateway.mconfig
+  1.2.1 Sample output
+  vagrant@distro-magma:~$ cat /etc/magma/gateway.mconfig | grep mcc
+      "mcc": "724"
+  vagrant@distro-magma:~$ cat /etc/magma/gateway.mconfig | grep mnc
+      "mnc": "99",
+
+1.3.
+Summing up all changes in gateway.mconfig
+
+vagrant@distro-magma:/etc/magma$ diff gateway.mconfig gateway.mconfig.orig
+72c72
+<       "enable5gFeatures": true,
+---
+>       "enable5gFeatures": false,
+80c80
+<       "mcc": "724",
+---
+>       "mcc": "001",
+84c84
+<       "mnc": "99",
+---
+>       "mnc": "01",
+109c109
+<       "enable5gFeatures": true,
+---
+>       "enable5gFeatures": false,
+130c130
+<       "enable5gFeatures": true,
+---
+>       "enable5gFeatures": false,
+153c153
+<       "enable5gFeatures": true,
+---
+>       "enable5gFeatures": false,
+vagrant@distro-magma:/etc/magma$
+
+ 
+2. Changes in /etc/magma/pipelined.yml for 5G features
+
+2.1
+As in headless mode following variables needs to be added
+
+vagrant@distro-magma:~$ diff /etc/magma/pipelined.yml /etc/magma/pipelined.yml.orig
+156,158d155
+< ovs_internal_sampling_port_number: 15578
+< ovs_internal_sampling_fwd_tbl_number: 201
+<
+168,171d164
+<
+< paging_timeout: 30
+< classifier_controller_id: 5
+< upf_node_identifier: 192.168.200.1
+vagrant@distro-magma:~$
+
+3.
+Restart the magma services
+
+3.1
+  sudo service magma@* stop
+  sudo service magma@magmad start
+  sudo service magma@mmme status
+
+4.
+Add the subscribers
+
+4.1
+  Commands
+  - subscriber_cli.py  add --lte-auth-key 465B5CE8B199B49FAA5F0A2EE238A6BC --lte-auth-opc E8ED289DEBA952E4283B54E88E6183CA IMSI724990000000008
+  - subscriber_cli.py update --lte-auth-key 465B5CE8B199B49FAA5F0A2EE238A6BC --lte-auth-opc E8ED289DEBA952E4283B54E88E6183CA --apn-config internet,5,15,1,1,1000,2000,1,,,,  IMSI724990000000008
+  - subscriber_cli.py get IMSI724990000000008
+
+4.2 
+  Sample output
+
+vagrant@distro-magma:~$ subscriber_cli.py  add --lte-auth-key 465B5CE8B199B49FAA5F0A2EE238A6BC --lte-auth-opc E8ED289DEBA952E4283B54E88E6183CA IMSI724990000000008
+
+vagrant@distro-magma:~$ subscriber_cli.py update --lte-auth-key 465B5CE8B199B49FAA5F0A2EE238A6BC --lte-auth-opc E8ED289DEBA952E4283B54E88E6183CA --apn-config internet,5,15,1,1,1000,2000,1,,,,  IMSI724990000000008
+
+vagrant@distro-magma:~$ subscriber_cli.py get IMSI724990000000008
+sid {
+  id: "724990000000008"
+}
+gsm {
+}
+lte {
+  state: ACTIVE
+  auth_key: "F[\\\350\261\231\264\237\252_\n.\3428\246\274"
+  auth_opc: "\350\355(\235\353\251R\344(;T\350\216a\203\312"
+}
+state {
+}
+non_3gpp {
+  ambr {
+    max_bandwidth_ul: 2000000000
+    max_bandwidth_dl: 4000000000
+  }
+  apn_config {
+    service_selection: "internet"
+    qos_profile {
+      class_id: 5
+      priority_level: 15
+      preemption_capability: true
+      preemption_vulnerability: true
+    }
+    ambr {
+      max_bandwidth_ul: 1000
+      max_bandwidth_dl: 2000
+    }
+    pdn: IPV6
+  }
+}
+sub_network {
+}
+
+Upgrade to the latest magma agw builds
+-----------------------------------------------------------
+1.
+Update the agw software
+
+  - vagrant@destro-magma:~$ cat /etc/apt/sources.list.d/magma.list
+      deb https://artifactory.magmacore.org/artifactory/debian-test focal-ci main
+  - sudo apt update
+  - sudo apt install -y magma -o Dpkg::Options::="--force-overwrite"
+
+
+Launch OAI GNB and UE Services
+-----------------------------------------------------------
+As mentined in steps : OAI_GNB_UE
+
+
+Verification steps on VM
+-----------------------------------------------------------
+
+1.
+For GNB Connectivity :
+  - cat /proc/net/sctp/assocs
+
+Expected Output :-
+vagrant@distromagma:~$ cat /proc/net/sctp/assocs
+ ASSOC     SOCK   STY SST ST HBKT ASSOC-ID TX_QUEUE RX_QUEUE UID INODE LPORT RPORT LADDRS <-> RADDRS HBINT INS OUTS MAXRT T1X T2X RTXC wmema wmemq sndbuf rcvbuf
+       0        0 2   1   3  0       1        0        0       0 50838 51643 38412  192.168.60.176 <-> *192.168.60.154      7500     2     2   10    0    0        0        1        0   212992   212992
+
+2.
+Additional commands 
+  sudo ovs-ofctl dump-flows gtp_br0 table=20
+  sudo ovs-ofctl dump-flows gtp_br0 table=0
+
+Common Issues
+---------------------------------------------------------
+
+1.
+  Logs 
+  - tail -F /var/log/syslog
+  - tail -F /var/log/mme.log
+
+2.
+In case if their are existing session in redis (fail to establish PDU)
+  - redis-cli -p 6380 FLUSHALL
+  - redis-cli -p 6380
+  - hgetall sessiond:sessions
