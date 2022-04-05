@@ -1,1 +1,1 @@
-# magma5g-oaignbue-integration
+# magma5g-oai-gnb-ue-integration
