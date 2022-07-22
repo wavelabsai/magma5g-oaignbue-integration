@@ -46,6 +46,7 @@ As this will be default put the AGW in headless mode, following changes are need
 
 1.1
 enable5gFeatures to true in gateway.mconfig (in /etc/magma/gateway.mconfig)
+ -- sed -i 's/\"enable5gFeatures\": false,/\"enable5gFeatures\": true/g' gateway.mconfig
   1.1.1 Sample output
   vagrant@distro-magma:/etc/magma$ cat gateway.mconfig | grep enable5
       "enable5gFeatures": true,
