@@ -179,8 +179,14 @@ Upgrade to the latest magma agw builds
 Update the agw software
 
   - vagrant@destro-magma:~$ cat /etc/apt/sources.list.d/magma.list
-      deb https://artifactory.magmacore.org/artifactory/debian-test focal-ci main  <<< For master
-      deb https://artifactory.magmacore.org/artifactory/debian-test/pool/focal-1.8.0/  <<< For 1.8 
+      For Master
+         deb https://artifactory.magmacore.org/artifactory/debian-test focal-ci main  <<< For master
+      For 1.8
+         rm -rf /etc/apt/sources.list.d/*
+         wget https://artifactory.magmacore.org:443/artifactory/api/gpg/key/public -O /tmp/public
+         apt-key add /tmp/public
+         echo "deb https://artifactory.magmacore.org/artifactory/debian-test focal-1.8.0 main" > /etc/apt/sources.list.d/magma.list
+
   - sudo apt update
   - sudo apt install -y magma -o Dpkg::Options::="--force-overwrite"
   - sudo apt install -y magma=1.8.0-1655980376-2a0f6a5d_amd64 -o Dpkg::Options::="--force-overwrite" (for installing specific version)
