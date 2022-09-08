@@ -35,7 +35,7 @@ Package installation on VM (distromagma)
   For Master
      - wget https://raw.githubusercontent.com/magma/magma/master/lte/gateway/deploy/agw_install_ubuntu.sh  << For master
      - wget https://raw.githubusercontent.com/magma/magma/v1.8/lte/gateway/deploy/agw_install_ubuntu.sh  << For 1.8 
-     - bash agw_install_ubuntu.sh
+     - bash agw_install_ubuntu.sh   <<<< If the machine loose connectivity go to the Common Issuess
   Note: 
     -> Do you accept those modifications and want to proceed with magma installation?(y/n) y  <<< Enter y
     -> This will install packages and restart the machine
