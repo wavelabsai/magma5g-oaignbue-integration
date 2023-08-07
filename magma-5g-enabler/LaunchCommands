@@ -185,8 +185,8 @@ Update the agw software
          deb https://artifactory.magmacore.org/artifactory/debian-test focal-ci main  <<< For master
       For 1.8
          rm -rf /etc/apt/sources.list.d/*
-         wget https://artifactory.magmacore.org:443/artifactory/api/gpg/key/public -O /tmp/public
-         apt-key add /tmp/public
+         wget -qO - https://linuxfoundation.jfrog.io/artifactory/api/security/keypair/magmaci/public | apt-key add -
+         add-apt-repository 'deb https://linuxfoundation.jfrog.io/artifactory/magma-packages focal-1.8.0 main' or 
          echo "deb https://artifactory.magmacore.org/artifactory/debian-test focal-1.8.0 main" > /etc/apt/sources.list.d/magma.list
 
   - sudo apt update
