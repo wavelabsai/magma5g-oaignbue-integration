@@ -35,7 +35,7 @@ sudo docker image tag panyogesh/oai-nr-ue:latest oai-nr-ue:latest
 
 4.
 Launching the dockers within Virtualbox (oai_gnb_ue_sim)
-
+(fetch the : wget https://github.com/wavelabsai/magma5g-oaignbue-integration/blob/master/oai-gnb-ue-enabler/docker-compose.yaml )
 4.1 sudo docker-compose up oai-gnb
 4.2 sudo docker-compose up oai-nr-ue
 
